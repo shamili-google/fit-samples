@@ -233,9 +233,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *  Creates a {@link SessionInsertRequest} for a run that consists of 10 minutes running,
-     *  10 minutes walking, and 10 minutes of running. The request contains two {@link DataSet}s:
-     *  speed data and activity segments data.
+     *  Creates a {@link SessionInsertRequest} for a run that consists of 10 minutes running, a 
+     *  5 minute pause, 10 minutes walking, and 10 minutes of running. The request contains two
+     *  {@link DataSet}s: speed data and activity segments data.
      *
      *  {@link Session}s are time intervals that are associated with all Fit data that falls into
      *  that time interval. This data can be inserted when inserting a session or independently,
@@ -255,11 +255,15 @@ public class MainActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         Date now = new Date();
         cal.setTime(now);
-        // Set a range of the run, using a start time of 30 minutes before this moment,
-        // with a 10-minute walk in the middle.
+        // Set a range of the run, using a start time of 35 minutes before this moment,
+        // with a 5-minute pause and 10-minute walk in the middle.
         long endTime = cal.getTimeInMillis();
         cal.add(Calendar.MINUTE, -10);
+        long endPauseTime = cal.getTimeInMillis();
+        cal.add(Calendar.MINUTE, -10);
         long endWalkTime = cal.getTimeInMillis();
+        cal.add(Calendar.MINUTE, -10);
+        long startPauseTime = cal.getTimeInMillis();
         cal.add(Calendar.MINUTE, -10);
         long startWalkTime = cal.getTimeInMillis();
         cal.add(Calendar.MINUTE, -10);
@@ -294,8 +298,8 @@ public class MainActivity extends AppCompatActivity {
         speedDataSet.add(secondRunSpeed);
 
         // [START build_insert_session_request_with_activity_segments]
-        // Create a second DataSet of ActivitySegments to indicate the runner took a 10-minute walk
-        // in the middle of the run.
+        // Create other DataSets of ActivitySegments to indicate the runner took a
+        // 5-minute pause and 10-minute walk in the middle of the run.
         DataSource activitySegmentDataSource = new DataSource.Builder()
                 .setAppPackageName(this.getPackageName())
                 .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
@@ -308,6 +312,12 @@ public class MainActivity extends AppCompatActivity {
                 .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS);
         firstRunningDp.getValue(Field.FIELD_ACTIVITY).setActivity(FitnessActivities.RUNNING);
         activitySegments.add(firstRunningDp);
+        
+        // FitnessActivities.STILL corresponds to a pause, when a use was still and not moving
+        DataPoint firstPauseDp = activitySegments.createDataPoint()
+                .setTimeInterval(startTime, startWalkTime, TimeUnit.MILLISECONDS);
+        firstPausedDp.getValue(Field.FIELD_ACTIVITY).setActivity(FitnessActivities.STILL);
+        activitySegments.add(firstPauseDp);
 
         DataPoint walkingDp = activitySegments.createDataPoint()
                 .setTimeInterval(startWalkTime, endWalkTime, TimeUnit.MILLISECONDS);
